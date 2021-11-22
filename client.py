@@ -82,8 +82,8 @@ def resend_segments(UDPClientSocket):
         # Resend all the segments in the window
         UDPClientSocket.sendto(segment, (server_host_name, server_port))
         # Add new timestamps for each segment sent
-        time_stamp.append(time.time())
         print("Retransmission sequence number = {}".format(get_sequence_number(segment)))
+    time_stamp.append(time.time())
 
 
 def sending_thread(UDPClientSocket, server_host_name, server_port, file_name, window_size, mss, condition):
@@ -113,12 +113,13 @@ def sending_thread(UDPClientSocket, server_host_name, server_port, file_name, wi
             UDPClientSocket.sendto(segments[-1], (server_host_name, server_port))
             # Add the timestamp of when this segment is being sent
             condition.acquire()
-            time_stamp.append(time.time())
+            if not time_stamp:
+                time_stamp.append(time.time())
             condition.release()
             # print("Packet has been sent")
             condition.acquire()
             # print("Checking for timeouts while the window has still not become full")
-            while (time.time() - time_stamp[0]) > timeout_value:
+            if (time.time() - time_stamp[0]) > timeout_value:
                 print("Timeout, sequence number = {}".format(get_sequence_number(segments[0])))
                 resend_segments(UDPClientSocket)
             condition.release()
@@ -134,7 +135,7 @@ def sending_thread(UDPClientSocket, server_host_name, server_port, file_name, wi
             # we check to make sure the oldest timer does not exceed the timeout_value
             # if it does we enter the loop
             # print("Checking for timeouts while the window is full")
-            while (time.time() - time_stamp[0]) > timeout_value:
+            if (time.time() - time_stamp[0]) > timeout_value:
                 print("Timeout, sequence number = {}".format(get_sequence_number(segments[0])))
                 resend_segments(UDPClientSocket)
                 condition.wait(timeout_value)
@@ -149,8 +150,8 @@ def sending_thread(UDPClientSocket, server_host_name, server_port, file_name, wi
         # Now we just have to keep an eye on the timer, and retransmit if the timer for the oldest segment expires.
         condition.acquire()
         # print("Checking for timeouts after all the packets have been sent")
-        if len(time_stamp) != 0:
-            while (time.time() - time_stamp[0]) > timeout_value:
+        if len(segments) != 0:
+            if (time.time() - time_stamp[0]) > timeout_value:
                 print("Timeout, sequence number = {}".format(get_sequence_number(segments[0])))
                 resend_segments(UDPClientSocket)
                 condition.wait(timeout_value)
@@ -178,7 +179,7 @@ def receiving_thread(UDPClientSocket, condition):
                 # print("Control Acquired Thread 2")
                 print("Ack Received Popping segment from segments list")
                 segments.pop(0)
-                time_stamp.pop(0)
+                time_stamp[0] = time.time()
                 last_ack = ack
                 condition.notify()
                 condition.release()

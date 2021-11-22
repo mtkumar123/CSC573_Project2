@@ -1,9 +1,10 @@
 import socket
 import random
+import sys
 
 
-def write_file(data):
-    with open("result.txt", mode="ab") as f:
+def write_file(data, name_file):
+    with open("{}".format(name_file), mode="ab") as f:
         f.write(data)
 
 
@@ -50,12 +51,14 @@ def check_probability(p):
 
 
 if __name__ == "__main__":
+    port = int(sys.argv[1])
+    file_name = str(sys.argv[2])
+    probability = float(sys.argv[3])
     UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPServerSocket.bind(("127.0.0.1", 7735))
+    UDPServerSocket.bind(("manojs-mbp.lan", port))
     true_data_indicator_value = b"0101010101010101"
     expected_sequence_number = 0
     ack = 0
-    p = 0.05
     while True:
         bytes_received = UDPServerSocket.recvfrom(2048)
         message = bytes_received[0]
@@ -76,9 +79,9 @@ if __name__ == "__main__":
                 # Next verify if the sequence number of the packet is correct
                 if expected_sequence_number == int(sequence_number, 2):
                     # Next use the probability function to force some errors:
-                    if check_probability(p):
+                    if check_probability(probability):
                         # Everything is correct write this to the file
-                        write_file(data)
+                        write_file(data, file_name)
                         # Set the new expected sequence number
                         expected_sequence_number += len(data)
                         # Set the ack number
