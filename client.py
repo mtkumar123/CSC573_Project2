@@ -123,7 +123,7 @@ def sending_thread(UDPClientSocket, server_host_name, server_port, file_name, wi
                 print("Timeout, sequence number = {}".format(get_sequence_number(segments[0])))
                 resend_segments(UDPClientSocket)
             condition.release()
-            time.sleep(0.1)
+            # time.sleep(0.1)
         else:
             # window size exceeded, wait for some acknowledgements
             # print("Window size exceeded waiting for some time")
@@ -184,7 +184,7 @@ def receiving_thread(UDPClientSocket, condition):
                 condition.notify()
                 condition.release()
                 # To ensure control goes back to thread 1
-                time.sleep(0.1)
+                time.sleep(0.001)
 
 
 if __name__ == "__main__":
