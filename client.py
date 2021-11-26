@@ -95,7 +95,7 @@ def sending_thread(UDPClientSocket, server_host_name, server_port, file_name, wi
     total_data = b""
     end_file_flag = False
     sequence_number = 0
-    timeout_value = 1
+    timeout_value = 0.2
     while end_file_flag is False:
         # Check if the len of segments is less than the window size
         if len(segments) < window_size:
@@ -203,10 +203,10 @@ if __name__ == "__main__":
                                      args=(UDPClientSocket, server_host_name, server_port, file_name, window_size, mss,
                                            condition))
     receiver_thread = threading.Thread(target=receiving_thread, args=(UDPClientSocket, condition))
-    print(time.time())
+    t_one = time.time()
     sender_thread.start()
     receiver_thread.start()
     sender_thread.join()
     receiver_thread.join()
-    print(time.time())
+    print(time.time() - t_one)
     UDPClientSocket.close()
