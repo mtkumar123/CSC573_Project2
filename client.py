@@ -7,16 +7,16 @@ segments = []
 time_stamp = []
 close_flag = False
 
-def rdt_send(filename, position):
+def rdt_send(filename, position, mss):
     """
-    This function will read one byte from the specified file, and return the byte and the current position in the file
+    This function will read mss byte from the specified file, and return the byte and the current position in the file
     :param filename: file to read from
     :param position: the last known position of data read from the file
     :return: data, new_position
     """
     with open(filename, "rb") as f:
         f.seek(position, 0)
-        data = f.read(1)
+        data = f.read(mss)
         new_position = f.tell()
         if new_position == position:
             # If the new position is equal to the old position, that means we have come to the end of the file
@@ -100,8 +100,8 @@ def sending_thread(UDPClientSocket, server_host_name, server_port, file_name, wi
         # Check if the len of segments is less than the window size
         if len(segments) < window_size:
             while len(total_data) < mss and end_file_flag is False:
-                # Read one byte from the file
-                data, position, end_file_flag = rdt_send(file_name, position)
+                # Read mss bytes from the file
+                data, position, end_file_flag = rdt_send(file_name, position, mss)
                 total_data = total_data + data
             # Give control to the sender_thread, since segments is a global variable
             condition.acquire()
@@ -203,8 +203,10 @@ if __name__ == "__main__":
                                      args=(UDPClientSocket, server_host_name, server_port, file_name, window_size, mss,
                                            condition))
     receiver_thread = threading.Thread(target=receiving_thread, args=(UDPClientSocket, condition))
+    print(time.time())
     sender_thread.start()
     receiver_thread.start()
     sender_thread.join()
     receiver_thread.join()
+    print(time.time())
     UDPClientSocket.close()

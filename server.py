@@ -55,7 +55,7 @@ if __name__ == "__main__":
     file_name = str(sys.argv[2])
     probability = float(sys.argv[3])
     UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-    UDPServerSocket.bind(("manojs-mbp.lan", port))
+    UDPServerSocket.bind(("0.0.0.0", port))
     true_data_indicator_value = b"0101010101010101"
     expected_sequence_number = 0
     ack = 0
