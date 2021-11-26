@@ -7,16 +7,16 @@ segments = []
 time_stamp = []
 close_flag = False
 
-def rdt_send(filename, position, mss):
+def rdt_send(filename, position):
     """
-    This function will read mss byte from the specified file, and return the byte and the current position in the file
+    This function will read 1 byte from the specified file, and return the byte and the current position in the file
     :param filename: file to read from
     :param position: the last known position of data read from the file
     :return: data, new_position
     """
     with open(filename, "rb") as f:
         f.seek(position, 0)
-        data = f.read(mss)
+        data = f.read(1)
         new_position = f.tell()
         if new_position == position:
             # If the new position is equal to the old position, that means we have come to the end of the file
@@ -100,8 +100,8 @@ def sending_thread(UDPClientSocket, server_host_name, server_port, file_name, wi
         # Check if the len of segments is less than the window size
         if len(segments) < window_size:
             while len(total_data) < mss and end_file_flag is False:
-                # Read mss bytes from the file
-                data, position, end_file_flag = rdt_send(file_name, position, mss)
+                # Read 1 bytes from the file
+                data, position, end_file_flag = rdt_send(file_name, position)
                 total_data = total_data + data
             # Give control to the sender_thread, since segments is a global variable
             condition.acquire()
@@ -184,7 +184,7 @@ def receiving_thread(UDPClientSocket, condition):
                 condition.notify()
                 condition.release()
                 # To ensure control goes back to thread 1
-                time.sleep(0.001)
+                time.sleep(0.01)
 
 
 if __name__ == "__main__":
